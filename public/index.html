@@ -19,17 +19,17 @@
   <header><a class="brand" href="/" aria-label="Mandarin, accueil"><span class="seal" lang="zh">学</span><span>Mandarin<small>UN MOT APRÈS L’AUTRE</small></span></a><button id="helpToggle" class="quiet" aria-label="Conseils et réglages" aria-expanded="false">☰</button></header>
   <section id="help" class="panel" hidden>
     <h2>Ton petit rituel</h2>
-    <p>Lis le caractère, retrouve sa prononciation et son sens, puis retourne la carte. Écoute et répète la phrase avant de te noter.</p>
+    <p>Chaque mot a deux cartes indépendantes : chinois → français et français → chinois. Retrouve le sens du caractère, ou le mot chinois à partir du français, puis retourne la carte. Écoute et répète la phrase avant de te noter.</p>
     <form id="settings"><label for="limit">Nouveaux mots par jour</label><div class="line"><input id="limit" type="number" min="1" max="50" value="10" required><button type="submit" class="secondary">Enregistrer</button></div></form>
-    <p class="small">Les mots oubliés reviennent vite. Les mots retenus reviennent après des intervalles plus longs. La progression est commune à tes appareils.</p>
+    <p class="small">Chaque jour : jusqu’au nombre choisi de nouveaux mots et de nouvelles cartes inverses. Les mots oubliés reviennent vite. Les mots retenus reviennent après des intervalles plus longs. La progression est commune à tes appareils.</p>
     <a class="textlink" href="api/export" download="mandarin-progression.json">Exporter ma progression ↓</a>
     <details><summary>Sur ton iPhone</summary><p>Active Tailscale, ouvre cette adresse dans Safari, puis Partager → Sur l’écran d’accueil. La connexion au serveur est nécessaire pour réviser et écouter.</p></details>
     <details><summary>Pinyin et sources</summary><p>Les accents indiquent les tons : mā (haut), má (montant), mǎ (bas), mà (descendant). Sans accent : ton neutre. À l’oral, certains tons changent en contexte, notamment 一, 不 et deux troisièmes tons successifs.</p><p>500 mots courants choisis pour débuter, avec exemples français et audios de synthèse. Vocabulaire issu de <a href="https://github.com/jelleverheyen/hsk-vocabulary">Complete HSK Vocabulary</a> (<a href="LICENSE-vocabulary.txt">MIT</a>), avec CC-CEDICT comme référence lexicale (<a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>). Répétition espacée simple, distincte de l’algorithme Anki.</p></details>
   </section>
   <section class="overview" aria-label="Progression">
-    <div class="line"><p class="eyebrow">CHINOIS → FRANÇAIS</p><span id="seen" class="small">500 mots à découvrir</span></div>
+    <div class="line"><p class="eyebrow">CHINOIS ↔ FRANÇAIS</p><span id="seen" class="small">500 mots à découvrir</span></div>
     <progress id="progress" max="500" value="0" aria-label="Mots découverts"></progress>
-    <div id="stats" class="stats" aria-live="polite">Connexion au serveur…</div>
+    <div id="stats" class="stats" aria-live="polite">Connexion au serveur…</div><p id="cardProgress" class="small"></p>
   </section>
   <nav class="tabs" aria-label="Mode"><button id="studyTab" aria-pressed="true">Réviser</button><button id="browseTab" aria-pressed="false">Les 500 mots</button></nav>
   <div id="notice" role="status" class="notice" hidden></div>

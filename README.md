@@ -261,3 +261,13 @@ Le vocabulaire est une **sélection pédagogique de mots courants pour débutant
 - Les pictogrammes sont des emojis et leur rendu dépend de l’appareil.
 
 Le pinyin indique principalement les tons lexicaux ; la prononciation peut changer dans une phrase. Les définitions courtes ne couvrent pas tous les sens d’un mot.
+
+## Révisions dans les deux sens
+
+Chaque mot possède deux cartes indépendantes : chinois → français et français → chinois. Les cartes françaises demandent de retrouver le mot étranger ; sa prononciation, les audios et les exemples apparaissent après révélation. La consultation libre reste un dictionnaire et ne modifie pas la progression.
+
+Les mots restent comptés une seule fois. Le corpus fournit 1000 cartes pour 500 mots. La limite quotidienne N autorise au plus N nouveaux mots et N nouvelles cartes inverses ; les révisions échues s’ajoutent à cette limite et restent prioritaires. Les cartes inverses des mots déjà découverts sont introduites progressivement, puis de nouveaux mots sont proposés. Si possible, on évite de montrer une nouvelle carte et son inverse immédiatement à la suite. Chaque sens suit les mêmes intervalles de répétition indépendamment.
+
+L’historique existant est conservé tel quel, sans renumérotation ni réécriture des lignes. Dans SQLite et l’export JSON version 2, un identifiant positif représente le sens étranger → français, et son opposé négatif le sens français → étranger. `abs(card_id)` identifie le mot dans `deck.json`. L’API renvoie aussi `word_id` et `direction` pour la carte suivante. Les anciennes réponses en attente restent acceptées.
+
+Vérification : `python3 test_directions.py` teste les deux sens, leurs échéances séparées, la conservation de l’historique, les quotas, les doublons et la priorité aux révisions. Après déploiement, recharger la page pour utiliser la nouvelle interface.

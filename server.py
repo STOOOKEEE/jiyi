@@ -24,6 +24,8 @@ LOGIN = os.environ.get('TAILSCALE_LOGIN', '')
 CSRF = secrets.token_urlsafe(32)
 DECK = json.loads((PUBLIC / 'deck.json').read_text())
 IDS = {c['id'] for c in DECK}
+# Positive IDs keep existing recognition history; negative IDs are independent French prompts.
+REVIEW_IDS = IDS | {-word_id for word_id in IDS}
 DAY = 86400
 PARIS = ZoneInfo('Europe/Paris')
 
@@ -76,18 +78,29 @@ def snapshot(db, now=None):
     now = time.time() if now is None else now
     midnight = dt.datetime.fromtimestamp(now, PARIS).replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
     cards = {r['id']: dict(r) for r in db.execute('SELECT * FROM cards')}
+    seen_words = {abs(card_id) for card_id in cards}
     limit = db.execute("SELECT value FROM settings WHERE key='daily_limit'").fetchone()[0]
-    introduced = sum(r['first_seen'] >= midnight for r in cards.values())
+    introduced = sum(r['id'] > 0 and r['first_seen'] >= midnight for r in cards.values())
+    reverse_introduced = sum(r['id'] < 0 and r['first_seen'] >= midnight for r in cards.values())
     due = sorted((r for r in cards.values() if r['due'] <= now), key=lambda r: (r['due'], r['id']))
-    unseen = sorted(IDS - cards.keys())
+    unseen = [c['id'] for c in DECK if c['id'] not in seen_words]
+    reverse = [-c['id'] for c in DECK if c['id'] in cards and -c['id'] not in cards]
     new_left = min(len(unseen), max(0, limit - introduced))
-    card = due[0] if due else fresh(unseen[0]) if new_left else None
+    reverse_left = min(len(reverse), max(0, limit - reverse_introduced))
+    new_id = reverse[0] if reverse_left else unseen[0] if new_left else None
+    # Separate sibling cards when another new word is available.
+    if reverse_left and new_left:
+        last = db.execute('SELECT card_id FROM reviews ORDER BY reviewed_at DESC, rowid DESC LIMIT 1').fetchone()
+        if last and abs(last[0]) == abs(new_id):
+            new_id = unseen[0]
+    card = dict(due[0]) if due else fresh(new_id) if new_id is not None else None
     if card:
-        card = dict(card)
-        card['waits'] = [schedule(card, g)[1] for g in range(1, 5)]
+        card.update(word_id=abs(card['id']), direction='reverse' if card['id'] < 0 else 'forward',
+                    waits=[schedule(card, g)[1] for g in range(1, 5)])
     future = [r['due'] for r in cards.values() if r['due'] > now]
-    return dict(next=card, due=len(due), new_left=new_left, seen=len(cards), total=len(IDS),
-                retained=sum(r['interval'] >= 21 * DAY for r in cards.values()),
+    return dict(next=card, due=len(due), new_left=new_left, reverse_left=reverse_left,
+                seen=len(seen_words), total=len(IDS), cards_seen=len(cards), total_cards=len(REVIEW_IDS),
+                retained=sum(all(cards.get(i, {}).get('interval', 0) >= 21 * DAY for i in (word_id, -word_id)) for word_id in seen_words),
                 reviews_today=db.execute('SELECT COUNT(*) FROM reviews WHERE reviewed_at >= ?', (midnight,)).fetchone()[0],
                 daily_limit=limit, next_due=min(future) if future else None, csrf=CSRF)
 
@@ -97,7 +110,7 @@ def review(db, payload, now=None):
     if not isinstance(payload, dict) or set(payload) != {'card_id', 'grade', 'revision', 'request_id'}:
         raise ValueError('Réponse invalide.')
     card_id, grade, revision, request_id = (payload[k] for k in ('card_id', 'grade', 'revision', 'request_id'))
-    if type(card_id) is not int or card_id not in IDS or type(grade) is not int or grade not in range(1, 5):
+    if type(card_id) is not int or card_id not in REVIEW_IDS or type(grade) is not int or grade not in range(1, 5):
         raise ValueError('Carte ou évaluation invalide.')
     if type(revision) is not int or revision < 0 or not isinstance(request_id, str) or not re.fullmatch(r'[A-Za-z0-9-]{16,80}', request_id):
         raise ValueError('Identifiant de révision invalide.')
@@ -114,8 +127,12 @@ def review(db, payload, now=None):
         raise RuntimeError('Cette carte a été révisée sur un autre appareil. La liste a été actualisée.')
     if record and card['due'] > now:
         raise ValueError('Cette carte n’est pas encore à réviser.')
-    if not record and not snapshot(db, now)['new_left']:
-        raise ValueError('La limite de nouveaux mots est atteinte pour aujourd’hui.')
+    if not record:
+        available = snapshot(db, now)
+        if card_id < 0 and not db.execute('SELECT 1 FROM cards WHERE id=?', (-card_id,)).fetchone():
+            raise ValueError('Découvrez d’abord ce mot dans le sens vers le français.')
+        if not available['reverse_left' if card_id < 0 else 'new_left']:
+            raise ValueError('La limite de nouvelles cartes dans ce sens est atteinte pour aujourd’hui.')
     step, interval, ease = schedule(card, grade)
     db.execute('INSERT OR REPLACE INTO cards VALUES (?,?,?,?,?,?,?)',
                (card_id, now + interval, interval, step, ease, revision + 1, card.get('first_seen', now)))
@@ -164,7 +181,7 @@ class Handler(BaseHTTPRequestHandler):
             with contextlib.closing(connect()) as db:
                 if path == '/api/state':
                     return self.send(200, snapshot(db))
-                backup = dict(version=1, exported_at=time.time(), cards=[dict(r) for r in db.execute('SELECT * FROM cards')],
+                backup = dict(version=2, card_id_encoding='positive=foreign-to-fr; negative=fr-to-foreign; abs(id)=word_id', exported_at=time.time(), cards=[dict(r) for r in db.execute('SELECT * FROM cards')],
                               reviews=[dict(r) for r in db.execute('SELECT * FROM reviews')],
                               settings=[dict(r) for r in db.execute('SELECT * FROM settings')])
                 return self.send(200, backup, extra={'Content-Disposition': 'attachment; filename="mandarin-progression.json"'})

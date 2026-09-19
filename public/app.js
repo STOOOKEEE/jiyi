@@ -20,7 +20,8 @@ function render() {
   if (!state) return;
   $('seen').textContent = `${state.seen} / ${state.total} mots découverts`;
   $('progress').value = state.seen;
-  $('stats').innerHTML = `<span><b>${state.due}</b> à revoir</span><span><b>${state.new_left}</b> nouveaux aujourd’hui</span><span><b>${state.reviews_today}</b> révisions faites</span>`;
+  $('stats').innerHTML = `<span><b>${state.due}</b> à revoir</span><span><b>${state.new_left}</b> nouveaux mots</span><span><b>${state.reverse_left}</b> carte${state.reverse_left>1?'s':''} inverse${state.reverse_left>1?'s':''} à découvrir</span><span><b>${state.reviews_today}</b> révisions faites</span>`;
+  $('cardProgress').textContent = `${state.cards_seen} / ${state.total_cards} cartes commencées · deux sens par mot`;
   $('limit').value = state.daily_limit;
   $('studyTab').setAttribute('aria-pressed',mode === 'study');
   $('browseTab').setAttribute('aria-pressed',mode === 'browse');
@@ -36,9 +37,10 @@ function render() {
     if (future) timer = setTimeout(() => refresh(), Math.max(1000, Math.min(60000, future.getTime()-Date.now()+500)));
     return;
   }
-  const card = deck.find(c => c.id === current.id);
+  const reverse = current.id < 0;
+  const card = deck.find(c => c.id === Math.abs(current.id));
   const example = esc(card.sentence).split(esc(card.hanzi)).join(`<mark>${esc(card.hanzi)}</mark>`);
-  $('card').innerHTML = `<article class="flashcard ${revealed?'back':''}"><div class="card-top"><span class="eyebrow">MOT ${String(card.id).padStart(3,'0')} / 500</span><span class="pill">${mode==='browse'?'DÉCOUVERTE':current.revision?'RÉVISION':'NOUVEAU MOT'}</span></div><h1 class="hanzi" lang="zh-CN">${esc(card.hanzi)}</h1>${revealed?`<p class="pinyin">${esc(card.pinyin)}</p><p class="meaning">${esc(card.fr)}</p><button class="play" data-audio="${esc(card.audio_word)}" data-label="▶ Écouter le mot" aria-pressed="false">▶ Écouter le mot</button>${card.emoji?`<div class="emoji" aria-hidden="true">${esc(card.emoji)}</div>`:''}<div class="example"><p class="eyebrow">DANS UNE PHRASE</p><p class="sentence" lang="zh-CN">${example}</p><p class="sentence-pinyin">${esc(card.sentence_pinyin)}</p><p class="translation">${esc(card.sentence_fr)}</p><button class="play" data-audio="${esc(card.audio_sentence)}" data-label="▶ Écouter la phrase" aria-pressed="false">▶ Écouter la phrase</button></div>${card.note?`<p class="note">${esc(card.note)}</p>`:''}`:'<p class="prompt">Comment se prononce ce mot ?<br>Qu’est-ce qu’il veut dire ?</p>'}</article>`;
+  $('card').innerHTML = `<article class="flashcard ${revealed?'back':''}"><div class="card-top"><span class="eyebrow">MOT ${String(card.id).padStart(3,'0')} / 500</span><span class="pill">${mode==='browse'?'DÉCOUVERTE':current.revision?'RÉVISION':reverse?'NOUVEAU SENS':'NOUVEAU MOT'}</span></div><p class="direction">${reverse?'FRANÇAIS → CHINOIS':'CHINOIS → FRANÇAIS'}</p><h1 class="${reverse?'french-prompt':'hanzi'}" lang="${reverse?'fr':'zh-CN'}">${esc(reverse?card.fr:card.hanzi)}</h1>${revealed?`${reverse?`<p class="hanzi" lang="zh-CN">${esc(card.hanzi)}</p>`:''}<p class="pinyin">${esc(card.pinyin)}</p>${reverse?'':`<p class="meaning">${esc(card.fr)}</p>`}<button class="play" data-audio="${esc(card.audio_word)}" data-label="▶ Écouter le mot" aria-pressed="false">▶ Écouter le mot</button>${card.emoji?`<div class="emoji" aria-hidden="true">${esc(card.emoji)}</div>`:''}<div class="example"><p class="eyebrow">DANS UNE PHRASE</p><p class="sentence" lang="zh-CN">${example}</p><p class="sentence-pinyin">${esc(card.sentence_pinyin)}</p><p class="translation">${esc(card.sentence_fr)}</p><button class="play" data-audio="${esc(card.audio_sentence)}" data-label="▶ Écouter la phrase" aria-pressed="false">▶ Écouter la phrase</button></div>${card.note?`<p class="note">${esc(card.note)}</p>`:''}`:`<p class="prompt">${reverse?'Comment dit-on cela en chinois ?<br>Retrouve le mot et sa prononciation.':'Comment se prononce ce mot ?<br>Qu’est-ce qu’il veut dire ?'}</p>`}</article>`;
   document.querySelectorAll('[data-audio]').forEach(button => button.onclick = () => play(button));
   if (!revealed) {
     $('actions').innerHTML = '<button id="reveal" class="primary wide">Voir la réponse</button>';
