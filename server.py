@@ -60,9 +60,11 @@ def schedule(card, grade):
     if grade == 2:
         return step, 600 if interval < DAY else math.ceil(interval / DAY * 1.2) * DAY, max(1.3, ease - .15)
     if grade == 3:
+        if card['revision'] == 0:
+            return 2, DAY, ease  # Known immediately: skip the short learning step.
         wait = 600 if step == 0 else DAY if step == 1 else 6 * DAY if step == 2 else max(DAY, round(interval / DAY * ease) * DAY)
         return step + 1, wait, ease
-    wait = 4 * DAY if interval < DAY else max(DAY, round(interval / DAY * ease * 1.3) * DAY)
+    wait = 4 * DAY if interval < DAY else max(schedule(card, 3)[1] + DAY, round(interval / DAY * ease * 1.3) * DAY)
     return max(3, step + 1), wait, min(3.0, ease + .15)
 
 

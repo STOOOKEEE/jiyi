@@ -9,7 +9,28 @@ import urllib.request
 import server as app
 
 
+def check_learning_steps():
+    card = app.fresh(1)
+    assert app.schedule(card, 3)[:2] == (2, app.DAY)
+    assert app.schedule(card, 4)[1] == 4 * app.DAY
+    # Forgotten -> one minute -> first successful recall in ten minutes -> one day.
+    for grade, expected in [(1, 60), (3, 600), (3, app.DAY), (3, 6 * app.DAY)]:
+        step, interval, ease = app.schedule(card, grade)
+        assert interval == expected
+        card.update(step=step, interval=interval, ease=ease, revision=card['revision'] + 1)
+    # A lapse on an established card restarts the same short sequence.
+    for grade, expected in [(1, 60), (1, 60), (2, 600), (3, 600), (3, app.DAY)]:
+        step, interval, ease = app.schedule(card, grade)
+        assert interval == expected
+        card.update(step=step, interval=interval, ease=ease, revision=card['revision'] + 1)
+    assert app.schedule(card, 4)[1] > app.schedule(card, 3)[1]
+    # Previously stored ten-minute cards graduate without resetting their history.
+    legacy = dict(app.fresh(1), step=1, interval=600, revision=1)
+    assert app.schedule(legacy, 3)[:2] == (2, app.DAY)
+
+
 def run():
+    check_learning_steps()
     with tempfile.TemporaryDirectory() as tmp:
         app.DATABASE = Path(tmp) / 'progress.sqlite3'
         app.initialize()
@@ -17,16 +38,17 @@ def run():
         payload = dict(card_id=1, grade=3, revision=0, request_id='first-review-request-0001')
         with contextlib.closing(app.connect()) as db, db:
             assert app.snapshot(db, now)['new_left'] == 10
+            assert app.snapshot(db, now)['next']['waits'][2] == app.DAY
             result = app.review(db, payload, now)
             assert result['seen'] == 1 and result['reviews_today'] == 1 and result['new_left'] == 9
         with contextlib.closing(app.connect()) as db, db:
             assert app.review(db, payload, now)['reviews_today'] == 1  # Lost response retry.
         with contextlib.closing(app.connect()) as db:
             card = dict(db.execute('SELECT * FROM cards WHERE id=1').fetchone())
-            assert card['due'] == now + 600 and card['revision'] == 1
-            assert app.snapshot(db, now + 601)['next']['id'] == 1  # Due reviews before new words.
-            assert app.schedule(card, 3)[1] == app.DAY
-            assert app.schedule(card, 4)[1] == 4 * app.DAY
+            assert card['due'] == now + app.DAY and card['revision'] == 1
+            assert app.snapshot(db, now + app.DAY + 1)['next']['id'] == 1  # Due reviews before new words.
+            assert app.schedule(card, 3)[1] == 6 * app.DAY
+            assert app.schedule(card, 4)[1] > app.schedule(card, 3)[1]
             assert app.schedule(card, 1)[1] == 60
         for bad, when, expected in [
             ({**payload, 'request_id':'different-request-0001'}, now + 601, RuntimeError),

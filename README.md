@@ -60,8 +60,8 @@ Les cartes dues passent avant les nouveaux mots. Les journées et la limite quot
 | --- | --- |
 | À revoir | Retour à 1 minute et reprise de l’apprentissage. |
 | Difficile | 10 minutes pendant l’apprentissage ; ensuite un intervalle légèrement augmenté. |
-| Bien | 10 minutes au premier passage, puis 1 jour, 6 jours et des intervalles croissants. |
-| Facile | 4 jours pour une carte en apprentissage ; davantage pour une carte déjà révisée. |
+| Bien | 1 jour si la carte est connue dès le premier passage. Après un oubli : 10 minutes, puis 1 jour, 6 jours et des intervalles croissants. |
+| Facile | 4 jours pour une carte en apprentissage ; ensuite un délai toujours supérieur à « Bien ». |
 
 Les boutons affichent le délai réellement calculé pour la carte. L’onglet **Les 500 mots** permet de consulter les réponses librement sans modifier la progression.
 
