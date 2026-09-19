@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f5f3ed">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Mandarin">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Mandarin · 500 mots</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" href="icon-192.png">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+<div class="app">
+  <header><a class="brand" href="/" aria-label="Mandarin, accueil"><span class="seal" lang="zh">学</span><span>Mandarin<small>UN MOT APRÈS L’AUTRE</small></span></a><button id="helpToggle" class="quiet" aria-label="Conseils et réglages" aria-expanded="false">☰</button></header>
+  <section id="help" class="panel" hidden>
+    <h2>Ton petit rituel</h2>
+    <p>Lis le caractère, retrouve sa prononciation et son sens, puis retourne la carte. Écoute et répète la phrase avant de te noter.</p>
+    <form id="settings"><label for="limit">Nouveaux mots par jour</label><div class="line"><input id="limit" type="number" min="1" max="50" value="10" required><button type="submit" class="secondary">Enregistrer</button></div></form>
+    <p class="small">Les mots oubliés reviennent vite. Les mots retenus reviennent après des intervalles plus longs. La progression est commune à tes appareils.</p>
+    <a class="textlink" href="api/export" download="mandarin-progression.json">Exporter ma progression ↓</a>
+    <details><summary>Sur ton iPhone</summary><p>Active Tailscale, ouvre cette adresse dans Safari, puis Partager → Sur l’écran d’accueil. La connexion au serveur est nécessaire pour réviser et écouter.</p></details>
+    <details><summary>Pinyin et sources</summary><p>Les accents indiquent les tons : mā (haut), má (montant), mǎ (bas), mà (descendant). Sans accent : ton neutre. À l’oral, certains tons changent en contexte, notamment 一, 不 et deux troisièmes tons successifs.</p><p>500 mots courants choisis pour débuter, avec exemples français et audios de synthèse. Vocabulaire issu de <a href="https://github.com/jelleverheyen/hsk-vocabulary">Complete HSK Vocabulary</a> (<a href="LICENSE-vocabulary.txt">MIT</a>), avec CC-CEDICT comme référence lexicale (<a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>). Répétition espacée simple, distincte de l’algorithme Anki.</p></details>
+  </section>
+  <section class="overview" aria-label="Progression">
+    <div class="line"><p class="eyebrow">CHINOIS → FRANÇAIS</p><span id="seen" class="small">500 mots à découvrir</span></div>
+    <progress id="progress" max="500" value="0" aria-label="Mots découverts"></progress>
+    <div id="stats" class="stats" aria-live="polite">Connexion au serveur…</div>
+  </section>
+  <nav class="tabs" aria-label="Mode"><button id="studyTab" aria-pressed="true">Réviser</button><button id="browseTab" aria-pressed="false">Les 500 mots</button></nav>
+  <div id="notice" role="status" class="notice" hidden></div>
+  <button id="retry" class="secondary wide" hidden>Réessayer la connexion</button>
+  <section id="browse" hidden><label class="sr-only" for="search">Chercher un mot</label><input id="search" type="search" placeholder="Un caractère, du pinyin, un mot français…" autocomplete="off"><p id="resultCount" class="small"></p><div id="wordList"></div></section>
+  <main id="review" aria-label="Carte à réviser"><div id="card"></div><div id="actions"></div></main>
+  <footer>中文 <span>·</span> Un peu, chaque jour.</footer>
+</div>
+</body>
+</html>

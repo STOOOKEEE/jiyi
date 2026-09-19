@@ -1,0 +1,16 @@
+[Unit]
+Description=Jiyi - personal Mandarin flashcards
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/dev/STOOOKEEE/jiyi
+ExecStart=/usr/bin/python3 %h/dev/STOOOKEEE/jiyi/server.py
+EnvironmentFile=%h/.config/jiyi/env
+Restart=on-failure
+RestartSec=3
+UMask=0077
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target
