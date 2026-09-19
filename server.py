@@ -1,4 +1,5 @@
 """Personal Mandarin review app. Python standard library only; run behind Tailscale Serve."""
+import offline
 import contextlib
 import datetime as dt
 import hmac
@@ -52,6 +53,7 @@ def initialize():
         CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value INTEGER NOT NULL);
         INSERT OR IGNORE INTO settings VALUES ('daily_limit',10);
         ''')
+        offline.initialize(db)
 
 
 def schedule(card, grade):
@@ -80,8 +82,8 @@ def snapshot(db, now=None):
     cards = {r['id']: dict(r) for r in db.execute('SELECT * FROM cards')}
     seen_words = {abs(card_id) for card_id in cards}
     limit = db.execute("SELECT value FROM settings WHERE key='daily_limit'").fetchone()[0]
-    introduced = sum(r['id'] > 0 and r['first_seen'] >= midnight for r in cards.values())
-    reverse_introduced = sum(r['id'] < 0 and r['first_seen'] >= midnight for r in cards.values())
+    introduced = sum(r['id'] > 0 and midnight <= r['first_seen'] <= now for r in cards.values())
+    reverse_introduced = sum(r['id'] < 0 and midnight <= r['first_seen'] <= now for r in cards.values())
     due = sorted((r for r in cards.values() if r['due'] <= now), key=lambda r: (r['due'], r['id']))
     unseen = [c['id'] for c in DECK if c['id'] not in seen_words]
     reverse = [-c['id'] for c in DECK if c['id'] in cards and -c['id'] not in cards]
@@ -101,7 +103,7 @@ def snapshot(db, now=None):
     return dict(next=card, due=len(due), new_left=new_left, reverse_left=reverse_left,
                 seen=len(seen_words), total=len(IDS), cards_seen=len(cards), total_cards=len(REVIEW_IDS),
                 retained=sum(all(cards.get(i, {}).get('interval', 0) >= 21 * DAY for i in (word_id, -word_id)) for word_id in seen_words),
-                reviews_today=db.execute('SELECT COUNT(*) FROM reviews WHERE reviewed_at >= ?', (midnight,)).fetchone()[0],
+                reviews_today=db.execute('SELECT COUNT(*) FROM reviews WHERE reviewed_at >= ? AND reviewed_at <= ?', (midnight,now)).fetchone()[0],
                 daily_limit=limit, next_due=min(future) if future else None, csrf=CSRF)
 
 
@@ -115,7 +117,8 @@ def review(db, payload, now=None):
     if type(revision) is not int or revision < 0 or not isinstance(request_id, str) or not re.fullmatch(r'[A-Za-z0-9-]{16,80}', request_id):
         raise ValueError('Identifiant de révision invalide.')
     encoded = json.dumps(payload, sort_keys=True)
-    db.execute('BEGIN IMMEDIATE')
+    if not db.in_transaction:
+        db.execute('BEGIN IMMEDIATE')
     previous = db.execute('SELECT payload FROM reviews WHERE request_id=?', (request_id,)).fetchone()
     if previous:
         if previous[0] != encoded:
@@ -177,15 +180,19 @@ class Handler(BaseHTTPRequestHandler):
         if not self.authorized():
             return
         path = urlsplit(self.path).path
+        if path=='/api/offline':
+            with contextlib.closing(connect()) as db:return self.send(200,offline.pack(db,snapshot(db),True))
         if path in {'/api/state', '/api/export'}:
             with contextlib.closing(connect()) as db:
                 if path == '/api/state':
                     return self.send(200, snapshot(db))
                 backup = dict(version=2, card_id_encoding='positive=foreign-to-fr; negative=fr-to-foreign; abs(id)=word_id', exported_at=time.time(), cards=[dict(r) for r in db.execute('SELECT * FROM cards')],
                               reviews=[dict(r) for r in db.execute('SELECT * FROM reviews')],
+                              offline_receipts=[dict(r) for r in db.execute('SELECT * FROM offline_receipts')],
+                              reading=[dict(r) for r in db.execute('SELECT * FROM reading_progress')],
                               settings=[dict(r) for r in db.execute('SELECT * FROM settings')])
                 return self.send(200, backup, extra={'Content-Disposition': 'attachment; filename="mandarin-progression.json"'})
-        allowed = {'/': 'index.html', '/index.html': 'index.html', '/app.js': 'app.js', '/style.css': 'style.css',
+        allowed = {'/': 'index.html', '/index.html': 'index.html', '/app.js': 'app.js', '/offline.js':'offline.js', '/sw.js':'sw.js', '/offline-assets.json':'offline-assets.json', '/style.css': 'style.css',
                    '/deck.json': 'deck.json', '/manifest.webmanifest': 'manifest.webmanifest',
                    '/icon-192.png': 'icon-192.png', '/icon-512.png': 'icon-512.png', '/apple-touch-icon.png': 'apple-touch-icon.png',
                    '/LICENSE-vocabulary.txt': 'LICENSE-vocabulary.txt'}
@@ -229,6 +236,9 @@ class Handler(BaseHTTPRequestHandler):
             with contextlib.closing(connect()) as db, db:
                 if self.path == '/api/review':
                     result = review(db, payload)
+                elif self.path == '/api/offline-review':
+                    outcome=offline.accept(db,payload,review,())
+                    result={'outcome':outcome,'pack':offline.pack(db,snapshot(db),True)}
                 elif self.path == '/api/settings':
                     if not isinstance(payload, dict) or set(payload) != {'daily_limit'} or type(payload['daily_limit']) is not int or not 1 <= payload['daily_limit'] <= 50:
                         raise ValueError('Choisis entre 1 et 50 nouveaux mots par jour.')

@@ -7,9 +7,9 @@ const pendingKey = 'mandarin-pending-review-v1';
 function notice(message, retry = false) { $('notice').textContent = message; $('notice').hidden = !message; $('retry').hidden = !retry; }
 function stopSound() { sound.pause(); if (playingButton) { playingButton.textContent = playingButton.dataset.label; playingButton.setAttribute('aria-pressed','false'); } playingButton = null; }
 function interval(seconds) { return seconds < 3600 ? `${Math.ceil(seconds / 60)} min` : seconds < 86400 ? `${Math.ceil(seconds / 3600)} h` : `${Math.round(seconds / 86400)} j`; }
-async function api(path, payload) {
-  const options = {cache:'no-store', signal:AbortSignal.timeout(15000)};
-  if (payload) Object.assign(options, {method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':state.csrf},body:JSON.stringify(payload)});
+async function networkApi(path, payload) {
+  const options = {cache:'no-store', signal:AbortSignal.timeout(path==='api/offline'?4000:15000)};
+  if (payload) Object.assign(options, {method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':Offline.token()||state.csrf},body:JSON.stringify(payload)});
   const response = await fetch(path, options);
   const body = await response.json();
   if (!response.ok) { const error = new Error(body.error || 'Le serveur ne répond pas.'); error.status = response.status; throw error; }
@@ -17,7 +17,7 @@ async function api(path, payload) {
 }
 function render() {
   stopSound(); clearTimeout(timer);
-  if (!state) return;
+  if (!state) return; Offline.start();
   $('seen').textContent = `${state.seen} / ${state.total} mots découverts`;
   $('progress').value = state.seen;
   $('stats').innerHTML = `<span><b>${state.due}</b> à revoir</span><span><b>${state.new_left}</b> nouveaux mots</span><span><b>${state.reverse_left}</b> carte${state.reverse_left>1?'s':''} inverse${state.reverse_left>1?'s':''} à découvrir</span><span><b>${state.reviews_today}</b> révisions faites</span>`;

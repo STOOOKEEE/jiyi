@@ -67,7 +67,7 @@ Les boutons affichent le délai réellement calculé pour la carte. L’onglet *
 
 Une réponse en attente de sauvegarde est conservée dans le navigateur. En cas de coupure, utiliser **Réessayer la connexion** : le serveur reconnaît les renvois de la même réponse et évite de la compter deux fois. Une modification concurrente depuis un autre appareil provoque une actualisation plutôt qu’un écrasement silencieux.
 
-**La connexion au serveur reste nécessaire**, y compris pour les audios. L’application ne propose pas de mode de révision hors ligne complet et ne met pas les MP3 en cache via un service worker.
+Les cartes et audios téléchargés fonctionnent hors ligne ; voir la préparation ci-dessous.
 
 ## Héberger sur un serveur avec Tailscale
 
@@ -271,3 +271,21 @@ Les mots restent comptés une seule fois. Le corpus fournit 1000 cartes pour 500
 L’historique existant est conservé tel quel, sans renumérotation ni réécriture des lignes. Dans SQLite et l’export JSON version 2, un identifiant positif représente le sens étranger → français, et son opposé négatif le sens français → étranger. `abs(card_id)` identifie le mot dans `deck.json`. L’API renvoie aussi `word_id` et `direction` pour la carte suivante. Les anciennes réponses en attente restent acceptées.
 
 Vérification : `python3 test_directions.py` teste les deux sens, leurs échéances séparées, la conservation de l’historique, les quotas, les doublons et la priorité aux révisions. Après déploiement, recharger la page pour utiliser la nouvelle interface.
+
+## Réviser hors ligne
+
+Ouvrir l’app en ligne une première fois sur chaque appareil, puis attendre **« ✓ Prêt hors ligne : tout est téléchargé »**. Le bouton **Télécharger / vérifier le hors ligne** permet de reprendre un téléchargement interrompu. Préparer la copie depuis l’icône d’écran d’accueil si c’est là que l’app sera utilisée.
+
+Les cartes peuvent ensuite être retournées et évaluées sans réseau, même après fermeture/réouverture. Les réponses sont enregistrées localement avant de passer à la carte suivante. Le compteur indique les actions en attente. À la reconnexion, ouvrir l’app : synchronisation automatique au retour au premier plan et toutes les 30 secondes, ou via **Synchroniser**. L’heure réelle de chaque réponse est conservée et les renvois ne créent pas de doublon. Garder la date/heure de l’appareil correcte.
+
+Le quota quotidien, les intervalles et les chapitres/niveaux disponibles utilisent les derniers réglages synchronisés. Changer ces réglages demande une connexion. Si la même carte a été révisée ailleurs entretemps, la progression du serveur est conservée ; la réponse incompatible apparaît dans « Réponses à vérifier » et reste exportable. Les données locales et le cache peuvent être effacés par le navigateur ou par l’utilisateur : ne pas vider le stockage avant synchronisation.
+
+### Maintenance du mode hors ligne
+
+`public/offline.js` conserve un état serveur et une file d’actions dans un seul enregistrement local, avec Web Locks pour coordonner les onglets. `offline.py` rejoue les actions dans le planificateur existant, avec accusés de réception SQLite et transactions. Aucun nouveau paquet nécessaire. `public/sw.js` met les fichiers listés dans `public/offline-assets.json` en cache ; les API ne sont jamais mises en cache. Après modification de l’interface, augmenter la version SHELL ; après modification du contenu téléchargé, régénérer la liste puis augmenter DATA et la version correspondante dans `offline.js` (purge de déconnexion). Les API doivent rester compatibles avec les anciennes files d’attente.
+
+Vérifications supplémentaires : `python3 test_offline.py` et `node test_worker.cjs`. Elles couvrent le rejeu, les conflits, les réponses perdues, l’ordre des réglages, la parité client/serveur, les fichiers complets, les plages audio Safari et l’effacement de la copie privée. La synchronisation s’effectue quand l’app est ouverte, sans dépendre d’une tâche de fond iOS.
+
+Les mots, exemples et audios sont téléchargés ensemble. Les cartes dans les deux sens gardent leur progression indépendante.
+
+Tailscale est nécessaire au retour pour joindre le serveur, mais pas pendant la séance hors ligne.
