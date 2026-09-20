@@ -138,7 +138,7 @@ const Offline=(()=>{
   try{
    if('serviceWorker' in navigator){const reg=await navigator.serviceWorker.getRegistration('./');if(reg?.active)await message(reg.active,'purge');}
   }finally{
-   await caches.delete(config.id+'-data-v1');localStorage.removeItem(key);loaded=false;token='';downloadText='Copie hors ligne effacée';status();
+   await caches.delete(config.id+'-data-v2');localStorage.removeItem(key);loaded=false;token='';downloadText='Copie hors ligne effacée';status();
   }
  }
  function readingValue(id){try{const data=read();if(!data)return localStorage.getItem(courseKey+id);return current().reading[id]?'read':'unread';}catch{return null;}}

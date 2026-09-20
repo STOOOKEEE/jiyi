@@ -296,3 +296,10 @@ Tailscale est nécessaire au retour pour joindre le serveur, mais pas pendant la
 Les cartes ratées ou encore aux étapes courtes restent comptées « à consolider » ; le quota ne limite que les nouveautés. Les cartes dues passent d’abord, puis les nouveautés autorisées. Lorsqu’il n’en reste plus, l’app avance les cartes d’apprentissage prévues dans les 20 prochaines minutes au lieu d’annoncer une fin de séance. Cette reprise est indiquée sur la carte. Les délais habituels (1 min, 10 min, puis 1 jour après les rappels réussis) restent utilisés pendant la séance et en cas de pause. Une carte déjà programmée à un jour ou plus ne peut pas être avancée ainsi.
 
 La même sélection est utilisée sur le serveur et, pour les apps à révision hors ligne, dans la file locale. `python3 test_learning_session.py` vérifie le quota épuisé, la reprise des erreurs, l’ordre des cartes, le passage à demain et le refus d’avancer les révisions longues.
+
+
+### Pinyin aligné dans les exemples
+
+Chaque caractère des 500 phrases porte sa syllabe juste en dessous, avec l’annotation HTML `ruby`. Les mots cibles restent surlignés et la traduction française ainsi que les deux audios sont conservés. Les formes à suffixe rhotique comme 点儿 / diǎnr forment un seul groupe ; 女儿 / nǚ ér conserve deux syllabes.
+
+Les annotations `sentence_ruby` sont pré-calculées dans `public/deck.json` à partir du pinyin déjà relu : aucune nouvelle prononciation n’est générée. Pour reconstruire après édition du corpus, télécharger [Unihan](https://www.unicode.org/Public/UCD/latest/ucd/Unihan.zip), extraire `Unihan_Readings.txt` puis exécuter `python3 build_sentence_ruby.py /chemin/Unihan_Readings.txt`. Le script utilise uniquement la bibliothèque standard, refuse les alignements ambigus et n’ajoute aucune dépendance au serveur. Vérification : `node test_sentence_ruby.cjs`. Incrémenter aussi les versions SHELL et DATA du cache après modification du corpus.

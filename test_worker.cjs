@@ -13,13 +13,13 @@ async function request(path,range){let result;events.fetch({request:new Request(
 (async()=>{
  fail=true;assert((await message('download')).error);fail=false;
  assert.equal((await message('download')).ready,true);
- const data=await caches.open(config.id+'-data-v1');for(const path of paths)assert(await data.match(u(path)));
+ const data=await caches.open(config.id+'-data-v2');for(const path of paths)assert(await data.match(u(path)));
  const count=fetches;online=false;assert.equal((await message('download')).ready,true);assert.equal(fetches,count);
  let response=await request(paths.at(-1),'bytes=2-5');assert.equal(response.status,206);assert.equal(await response.text(),'2345');
  response=await request(paths.at(-1),'bytes=-3');assert.equal(await response.text(),'789');
  response=await request(paths.at(-1),'bytes=500-600');assert.equal(response.status,416);
  assert.equal(await request('api/offline'),undefined);assert.equal(await request('offline-assets.json'),undefined);
- assert.equal((await message('purge')).ok,true);assert.equal(stores.has(config.id+'-data-v1'),false);
+ assert.equal((await message('purge')).ok,true);assert.equal(stores.has(config.id+'-data-v2'),false);
  if(config.login)assert(events.push&&events.notificationclick);
  console.log('PASS worker: interrupted download resumes, complete cache works without network, audio ranges, API bypass, logout purge, push retained');
 })().catch(e=>{console.error(e);process.exitCode=1;});

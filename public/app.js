@@ -15,6 +15,23 @@ async function networkApi(path, payload) {
   if (!response.ok) { const error = new Error(body.error || 'Le serveur ne répond pas.'); error.status = response.status; throw error; }
   return body;
 }
+function sentenceMarkup(card) {
+  if (!card.sentence_ruby) {
+    const example = esc(card.sentence).split(esc(card.hanzi)).join(`<mark>${esc(card.hanzi)}</mark>`);
+    return `<p class="sentence" lang="zh-CN">${example}</p><p class="sentence-pinyin">${esc(card.sentence_pinyin)}</p>`;
+  }
+  const targets = [];
+  for (let at = card.sentence.indexOf(card.hanzi); at !== -1; at = card.sentence.indexOf(card.hanzi, at + card.hanzi.length)) targets.push([at, at + card.hanzi.length]);
+  let offset = 0;
+  const annotated = card.sentence_ruby.map(part => {
+    const end = offset + part.text.length;
+    const target = targets.some(([start, stop]) => start < end && stop > offset);
+    offset = end;
+    const text = target ? `<mark>${esc(part.text)}</mark>` : esc(part.text);
+    return part.pinyin ? `<ruby>${text}<rt lang="zh-Latn">${esc(part.pinyin)}</rt></ruby>` : text;
+  }).join('');
+  return `<p class="sentence sentence-aligned" lang="zh-CN">${annotated}</p>`;
+}
 function render() {
   stopSound(); clearTimeout(timer);
   if (!state) return; Offline.start();
@@ -39,8 +56,7 @@ function render() {
   }
   const reverse = current.id < 0;
   const card = deck.find(c => c.id === Math.abs(current.id));
-  const example = esc(card.sentence).split(esc(card.hanzi)).join(`<mark>${esc(card.hanzi)}</mark>`);
-  $('card').innerHTML = `<article class="flashcard ${revealed?'back':''}"><div class="card-top"><span class="eyebrow">MOT ${String(card.id).padStart(3,'0')} / 500</span><span class="pill">${mode==='browse'?'DÉCOUVERTE':current.interval>0&&current.interval<86400?'À CONSOLIDER':current.revision?'RÉVISION':reverse?'NOUVEAU SENS':'NOUVEAU MOT'}</span></div><p class="direction">${reverse?'FRANÇAIS → CHINOIS':'CHINOIS → FRANÇAIS'}</p><h1 class="${reverse?'french-prompt':'hanzi'}" lang="${reverse?'fr':'zh-CN'}">${esc(reverse?card.fr:card.hanzi)}</h1>${revealed?`${reverse?`<p class="hanzi" lang="zh-CN">${esc(card.hanzi)}</p>`:''}<p class="pinyin">${esc(card.pinyin)}</p>${reverse?'':`<p class="meaning">${esc(card.fr)}</p>`}<button class="play" data-audio="${esc(card.audio_word)}" data-label="▶ Écouter le mot" aria-pressed="false">▶ Écouter le mot</button>${card.emoji?`<div class="emoji" aria-hidden="true">${esc(card.emoji)}</div>`:''}<div class="example"><p class="eyebrow">DANS UNE PHRASE</p><p class="sentence" lang="zh-CN">${example}</p><p class="sentence-pinyin">${esc(card.sentence_pinyin)}</p><p class="translation">${esc(card.sentence_fr)}</p><button class="play" data-audio="${esc(card.audio_sentence)}" data-label="▶ Écouter la phrase" aria-pressed="false">▶ Écouter la phrase</button></div>${card.note?`<p class="note">${esc(card.note)}</p>`:''}`:`<p class="prompt">${reverse?'Comment dit-on cela en chinois ?<br>Retrouve le mot et sa prononciation.':'Comment se prononce ce mot ?<br>Qu’est-ce qu’il veut dire ?'}</p>`}</article>${current.learning_ahead?'<p class="caption">Les autres cartes sont terminées. Cette carte revient maintenant pour consolider le rappel.</p>':''}`;
+  $('card').innerHTML = `<article class="flashcard ${revealed?'back':''}"><div class="card-top"><span class="eyebrow">MOT ${String(card.id).padStart(3,'0')} / 500</span><span class="pill">${mode==='browse'?'DÉCOUVERTE':current.interval>0&&current.interval<86400?'À CONSOLIDER':current.revision?'RÉVISION':reverse?'NOUVEAU SENS':'NOUVEAU MOT'}</span></div><p class="direction">${reverse?'FRANÇAIS → CHINOIS':'CHINOIS → FRANÇAIS'}</p><h1 class="${reverse?'french-prompt':'hanzi'}" lang="${reverse?'fr':'zh-CN'}">${esc(reverse?card.fr:card.hanzi)}</h1>${revealed?`${reverse?`<p class="hanzi" lang="zh-CN">${esc(card.hanzi)}</p>`:''}<p class="pinyin">${esc(card.pinyin)}</p>${reverse?'':`<p class="meaning">${esc(card.fr)}</p>`}<button class="play" data-audio="${esc(card.audio_word)}" data-label="▶ Écouter le mot" aria-pressed="false">▶ Écouter le mot</button>${card.emoji?`<div class="emoji" aria-hidden="true">${esc(card.emoji)}</div>`:''}<div class="example"><p class="eyebrow">DANS UNE PHRASE</p>${sentenceMarkup(card)}<p class="translation">${esc(card.sentence_fr)}</p><button class="play" data-audio="${esc(card.audio_sentence)}" data-label="▶ Écouter la phrase" aria-pressed="false">▶ Écouter la phrase</button></div>${card.note?`<p class="note">${esc(card.note)}</p>`:''}`:`<p class="prompt">${reverse?'Comment dit-on cela en chinois ?<br>Retrouve le mot et sa prononciation.':'Comment se prononce ce mot ?<br>Qu’est-ce qu’il veut dire ?'}</p>`}</article>${current.learning_ahead?'<p class="caption">Les autres cartes sont terminées. Cette carte revient maintenant pour consolider le rappel.</p>':''}`;
   document.querySelectorAll('[data-audio]').forEach(button => button.onclick = () => play(button));
   if (!revealed) {
     $('actions').innerHTML = '<button id="reveal" class="primary wide">Voir la réponse</button>';
