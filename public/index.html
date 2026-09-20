@@ -11,9 +11,8 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="icon" href="icon-192.png">
-  <link rel="stylesheet" href="style.css?v=20260920-ruby">
-  <script src="offline.js?v=20260920-ruby" defer></script><script src="app.js?v=20260920-ruby" defer></script>
-<script id="offlineConfig" type="application/json">{"id": "jiyi", "poker": false, "login": false}</script><script defer src="offline.js?v=20260920-ruby"></script><script defer src="app.js?v=20260920-ruby"></script></head>
+  <link rel="stylesheet" href="style.css?v=20260920-writing">
+<script id="offlineConfig" type="application/json">{"id": "jiyi", "poker": false, "login": false}</script><script defer src="offline.js?v=20260920-writing"></script><script defer src="vendor/hanzi-writer.min.js"></script><script defer src="writing.js?v=20260920-writing"></script><script defer src="app.js?v=20260920-writing"></script></head>
 <body>
 <div class="app">
   <header><a class="brand" href="/" aria-label="Mandarin, accueil"><span class="seal" lang="zh">学</span><span>Mandarin<small>UN MOT APRÈS L’AUTRE</small></span></a><button id="helpToggle" class="quiet" aria-label="Conseils et réglages" aria-expanded="false">☰</button></header><section class="offline-panel" aria-label="Mode hors ligne"><p id="offlineState" role="status">Préparation…</p><p id="offlineDownloadStatus" class="small">Téléchargement à préparer</p><button id="offlineDownload" class="secondary">Télécharger / vérifier le hors ligne</button> <button id="offlineSync" class="secondary">Synchroniser</button><details id="offlineConflicts" hidden><summary>Réponses à vérifier — progression serveur conservée</summary><p>Ces réponses ont été conservées mais pas appliquées : la carte ou ses réglages ont changé sur un autre appareil.</p><pre id="offlineConflictText"></pre><button id="offlineExport" class="secondary">Exporter la sauvegarde locale</button></details></section>
@@ -35,7 +34,16 @@
   <div id="notice" role="status" class="notice" hidden></div>
   <button id="retry" class="secondary wide" hidden>Réessayer la connexion</button>
   <section id="browse" hidden><label class="sr-only" for="search">Chercher un mot</label><input id="search" type="search" placeholder="Un caractère, du pinyin, un mot français…" autocomplete="off"><p id="resultCount" class="small"></p><div id="wordList"></div></section>
-  <main id="review" aria-label="Carte à réviser"><div id="card"></div><div id="actions"></div></main>
+  <main id="review" aria-label="Carte à réviser"><div id="card"></div><section id="writing" class="writing-panel" aria-label="Apprendre à écrire" hidden>
+<div class="line"><h2>À toi de tracer</h2><span id="writePosition" class="small"></span></div>
+<p class="small">Trace au doigt, au stylet ou à la souris, un trait à la fois. Le modèle aide à apprendre le sens et l’ordre des traits.</p>
+<div class="writing-pad-wrap"><div id="writePad" class="writing-pad" role="group" aria-label="Zone de tracé du caractère" aria-describedby="writeStatus"></div></div>
+<p id="writeStatus" class="writing-status" role="status" aria-live="polite"></p>
+<div class="writing-controls"><button id="writeAnimate" class="secondary">Voir le tracé</button><button id="writeGuide" class="secondary">Me guider</button><button id="writeMemory" class="secondary">Sans modèle</button><button id="writeRestart" class="secondary">Recommencer</button></div>
+<div class="line writing-navigation"><button id="writePrevious" class="quiet">← Précédent</button><button id="writeNext" class="quiet">Suivant →</button></div>
+<p class="caption">L’exercice ne note pas la carte à ta place. Après la réponse, choisis « À revoir » si tu as eu besoin du modèle.</p>
+<p class="caption">Tracés © Arphic, redistribuables sous <a href="vendor/ARPHICPL-English.txt" target="_blank" rel="noopener">licence Arphic</a>, sans garantie. Moteur Hanzi Writer, <a href="vendor/HANZI-WRITER-LICENSE.txt" target="_blank" rel="noopener">MIT</a>.</p>
+</section><div id="actions"></div></main>
   <footer>中文 <span>·</span> Un peu, chaque jour.</footer>
 </div>
 </body>

@@ -9,3 +9,8 @@
 .sentence-aligned{line-height:2.65;overflow-wrap:normal;word-break:normal;margin:12px 0 18px}
 .sentence-aligned ruby{ruby-position:under;ruby-align:center;white-space:nowrap;margin-inline:.12em}
 .sentence-aligned rt{font:400 14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--green);text-align:center}
+
+.writing-panel{margin-top:18px;border:1px solid var(--line);border-radius:22px;background:#fffdfa;padding:20px;text-align:left}
+.writing-panel h2{font-size:18px;margin:0}.writing-panel>.line{flex-wrap:wrap}.writing-pad-wrap{display:flex;justify-content:center;max-width:100%;margin:18px auto}
+.writing-pad{touch-action:none;user-select:none;-webkit-user-select:none;background:linear-gradient(to right,transparent calc(50% - .5px),#dce3d9 50%,transparent calc(50% + .5px)),linear-gradient(to bottom,transparent calc(50% - .5px),#dce3d9 50%,transparent calc(50% + .5px));border:1px solid #bacbbe;border-radius:12px;overflow:hidden;line-height:0}
+.writing-pad svg{display:block;max-width:100%;touch-action:none}.writing-status{font-size:14px;min-height:3em;color:var(--green)}.writing-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px}.writing-controls button{font-size:13px;padding:12px 8px}.writing-navigation{margin-top:12px}.writing-navigation .quiet{width:auto;font-size:14px;padding:8px}

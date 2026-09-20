@@ -201,7 +201,7 @@ class Handler(BaseHTTPRequestHandler):
                               reading=[dict(r) for r in db.execute('SELECT * FROM reading_progress')],
                               settings=[dict(r) for r in db.execute('SELECT * FROM settings')])
                 return self.send(200, backup, extra={'Content-Disposition': 'attachment; filename="mandarin-progression.json"'})
-        allowed = {'/': 'index.html', '/index.html': 'index.html', '/app.js': 'app.js', '/offline.js':'offline.js', '/sw.js':'sw.js', '/offline-assets.json':'offline-assets.json', '/style.css': 'style.css',
+        allowed = {'/': 'index.html', '/index.html': 'index.html', '/app.js': 'app.js', '/offline.js':'offline.js', '/writing.js':'writing.js', '/strokes.json':'strokes.json', '/vendor/HANZI-WRITER-LICENSE.txt':'vendor/HANZI-WRITER-LICENSE.txt', '/vendor/ARPHICPL.TXT':'vendor/ARPHICPL.TXT', '/vendor/ARPHICPL-English.txt':'vendor/ARPHICPL-English.txt', '/vendor/hanzi-writer.min.js':'vendor/hanzi-writer.min.js', '/sw.js':'sw.js', '/offline-assets.json':'offline-assets.json', '/style.css': 'style.css',
                    '/deck.json': 'deck.json', '/manifest.webmanifest': 'manifest.webmanifest',
                    '/icon-192.png': 'icon-192.png', '/icon-512.png': 'icon-512.png', '/apple-touch-icon.png': 'apple-touch-icon.png',
                    '/LICENSE-vocabulary.txt': 'LICENSE-vocabulary.txt'}

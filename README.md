@@ -303,3 +303,17 @@ La même sélection est utilisée sur le serveur et, pour les apps à révision 
 Chaque caractère des 500 phrases porte sa syllabe juste en dessous, avec l’annotation HTML `ruby`. Les mots cibles restent surlignés et la traduction française ainsi que les deux audios sont conservés. Les formes à suffixe rhotique comme 点儿 / diǎnr forment un seul groupe ; 女儿 / nǚ ér conserve deux syllabes.
 
 Les annotations `sentence_ruby` sont pré-calculées dans `public/deck.json` à partir du pinyin déjà relu : aucune nouvelle prononciation n’est générée. Pour reconstruire après édition du corpus, télécharger [Unihan](https://www.unicode.org/Public/UCD/latest/ucd/Unihan.zip), extraire `Unihan_Readings.txt` puis exécuter `python3 build_sentence_ruby.py /chemin/Unihan_Readings.txt`. Le script utilise uniquement la bibliothèque standard, refuse les alignements ambigus et n’ajoute aucune dépendance au serveur. Vérification : `node test_sentence_ruby.cjs`. Incrémenter aussi les versions SHELL et DATA du cache après modification du corpus.
+
+
+### Écrire les caractères
+
+Sur une carte français → chinois, tracer le mot de mémoire dans la zone d’écriture, au doigt ou à la souris. **Voir le tracé** anime les traits dans l’ordre ; **Me guider** montre le modèle et le prochain trait ; **Sans modèle** permet de recommencer de mémoire. Pour un mot de plusieurs caractères, les boutons Précédent/Suivant permettent de les travailler séparément. Après révélation, les cartes chinois → français proposent aussi « Apprendre à écrire ce mot ».
+
+La validation compare chaque trait attendu (forme, sens et ordre), avec une tolérance : ce n’est pas une reconnaissance libre de toute écriture manuscrite. Le dessin ne note pas automatiquement la carte. Évaluer ensuite son rappel avec les boutons habituels ; choisir À revoir si le modèle était nécessaire. Seule cette évaluation entre dans la progression synchronisée ; les dessins ne sont pas conservés après fermeture.
+
+Les tracés des 526 caractères du corpus (environ 1,2 Mo) sont inclus dans le téléchargement hors ligne. Attendre la confirmation que tout est téléchargé après mise à jour. Aucun CDN n’est utilisé pendant les exercices.
+
+- Moteur : [Hanzi Writer 3.7.3](https://github.com/chanind/hanzi-writer), [licence MIT](public/vendor/HANZI-WRITER-LICENSE.txt).
+- Tracés : sous-ensemble de [Hanzi Writer Data 2.0.1](https://github.com/chanind/hanzi-writer-data), dérivé de Make Me a Hanzi et des polices Arphic, sous [Arphic Public License](public/vendor/ARPHICPL.TXT) ([anglais](public/vendor/ARPHICPL-English.txt)). Les fichiers individuels restent inchangés, regroupés dans `public/strokes.json`.
+
+Reconstruction : `python3 build_writing_assets.py` télécharge les deux versions épinglées depuis npm, vérifie leur intégrité SHA-512 et conserve uniquement les caractères du deck avec leurs licences. Vérification : `node test_writing.cjs`. Après modification, augmenter SHELL et DATA comme décrit plus haut.
