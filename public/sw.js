@@ -1,5 +1,5 @@
 'use strict';
-const APP={"id": "jiyi", "shell": ["", "index.html", "app.js", "offline.js", "writing.js", "vendor/hanzi-writer.min.js", "style.css", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png"]}, BASE=new URL('./',self.location.href), SHELL=APP.id+'-shell-v5', DATA=APP.id+'-data-v3';
+const APP={"id": "jiyi", "shell": ["", "index.html", "app.js", "offline.js", "writing.js", "vendor/hanzi-writer.min.js", "style.css", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png"]}, BASE=new URL('./',self.location.href), SHELL=APP.id+'-shell-v6', DATA=APP.id+'-data-v3';
 const url=path=>new URL(path,BASE).href;
 let download=null,cancel=false;
 self.addEventListener('install',e=>e.waitUntil((async()=>{const c=await caches.open(SHELL);await c.addAll(APP.shell.map(p=>new Request(url(p),{cache:'reload'})));await self.skipWaiting();})()));

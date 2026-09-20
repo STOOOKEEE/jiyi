@@ -317,3 +317,8 @@ Les tracés des 526 caractères du corpus (environ 1,2 Mo) sont inclus dans le t
 - Tracés : sous-ensemble de [Hanzi Writer Data 2.0.1](https://github.com/chanind/hanzi-writer-data), dérivé de Make Me a Hanzi et des polices Arphic, sous [Arphic Public License](public/vendor/ARPHICPL.TXT) ([anglais](public/vendor/ARPHICPL-English.txt)). Les fichiers individuels restent inchangés, regroupés dans `public/strokes.json`.
 
 Reconstruction : `python3 build_writing_assets.py` télécharge les deux versions épinglées depuis npm, vérifie leur intégrité SHA-512 et conserve uniquement les caractères du deck avec leurs licences. Vérification : `node test_writing.cjs`. Après modification, augmenter SHELL et DATA comme décrit plus haut.
+
+
+### Rappel du sens sans indice phonétique
+
+Pendant les révisions, le pinyin du mot est masqué même après révélation de la réponse. « Afficher le pinyin du mot » le dévoile à la demande, et se referme à la carte suivante. Les annotations caractère par caractère des exemples et les audios restent disponibles. La consultation libre conserve le pinyin visible.
