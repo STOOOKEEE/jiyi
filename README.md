@@ -289,3 +289,10 @@ Vérifications supplémentaires : `python3 test_offline.py` et `node test_worker
 Les mots, exemples et audios sont téléchargés ensemble. Les cartes dans les deux sens gardent leur progression indépendante.
 
 Tailscale est nécessaire au retour pour joindre le serveur, mais pas pendant la séance hors ligne.
+
+
+### Terminer les cartes en apprentissage
+
+Les cartes ratées ou encore aux étapes courtes restent comptées « à consolider » ; le quota ne limite que les nouveautés. Les cartes dues passent d’abord, puis les nouveautés autorisées. Lorsqu’il n’en reste plus, l’app avance les cartes d’apprentissage prévues dans les 20 prochaines minutes au lieu d’annoncer une fin de séance. Cette reprise est indiquée sur la carte. Les délais habituels (1 min, 10 min, puis 1 jour après les rappels réussis) restent utilisés pendant la séance et en cas de pause. Une carte déjà programmée à un jour ou plus ne peut pas être avancée ainsi.
+
+La même sélection est utilisée sur le serveur et, pour les apps à révision hors ligne, dans la file locale. `python3 test_learning_session.py` vérifie le quota épuisé, la reprise des erreurs, l’ordre des cartes, le passage à demain et le refus d’avancer les révisions longues.

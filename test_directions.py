@@ -40,7 +40,7 @@ def run():
   assert grade(-first,1,0,now+2,'first-reverse')['reviews_today']==3
   grade(-second,3,0,now+3,'second-reverse')
   full=state(now+3)
-  assert full['new_left']==0 and full['reverse_left']==0 and full['next'] is None
+  assert full['new_left']==0 and full['reverse_left']==0 and full['next']['id']==-first and full['next']['learning_ahead']
   assert full['seen']==2 and full['cards_seen']==4
   assert row(-second)['interval']==app.DAY
   assert state(now+62)['next']['id']==-first

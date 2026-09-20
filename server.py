@@ -96,11 +96,18 @@ def snapshot(db, now=None):
         if last and abs(last[0]) == abs(new_id):
             new_id = unseen[0]
     card = dict(due[0]) if due else fresh(new_id) if new_id is not None else None
+    # Finish short learning steps after due/new cards, instead of ending the session.
+    learning = sorted((r for r in cards.values() if r['interval'] < DAY), key=lambda r: (r['due'], r['id']))
+    ahead = card is None and bool(learning) and learning[0]['due'] <= now + 1200
+    if ahead:
+        last = db.execute('SELECT card_id FROM reviews ORDER BY reviewed_at DESC, rowid DESC LIMIT 1').fetchone()
+        card = dict(next((r for r in learning if r['due'] <= now + 1200 and (not last or r['id'] != last[0])), learning[0]))
+        card['learning_ahead'] = True
     if card:
         card.update(word_id=abs(card['id']), direction='reverse' if card['id'] < 0 else 'forward',
                     waits=[schedule(card, g)[1] for g in range(1, 5)])
     future = [r['due'] for r in cards.values() if r['due'] > now]
-    return dict(next=card, due=len(due), new_left=new_left, reverse_left=reverse_left,
+    return dict(next=card, learning_left=len(learning), due=len(due), new_left=new_left, reverse_left=reverse_left,
                 seen=len(seen_words), total=len(IDS), cards_seen=len(cards), total_cards=len(REVIEW_IDS),
                 retained=sum(all(cards.get(i, {}).get('interval', 0) >= 21 * DAY for i in (word_id, -word_id)) for word_id in seen_words),
                 reviews_today=db.execute('SELECT COUNT(*) FROM reviews WHERE reviewed_at >= ? AND reviewed_at <= ?', (midnight,now)).fetchone()[0],
@@ -129,7 +136,9 @@ def review(db, payload, now=None):
     if card['revision'] != revision:
         raise RuntimeError('Cette carte a été révisée sur un autre appareil. La liste a été actualisée.')
     if record and card['due'] > now:
-        raise ValueError('Cette carte n’est pas encore à réviser.')
+        offered = snapshot(db, now)['next']
+        if not offered or offered['id'] != card_id or not offered.get('learning_ahead'):
+            raise ValueError('Cette carte n’est pas encore à réviser.')
     if not record:
         available = snapshot(db, now)
         if card_id < 0 and not db.execute('SELECT 1 FROM cards WHERE id=?', (-card_id,)).fetchone():

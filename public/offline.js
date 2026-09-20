@@ -38,9 +38,11 @@ const Offline=(()=>{
   let id=reverse_left?-reverse[0].id:new_left?unseen[0].id:null;
   if(reverse_left&&new_left&&Math.abs(last)===Math.abs(id))id=unseen[0].id;
   const due=values.filter(c=>c.due<=now).sort((a,b)=>a.due-b.due||a.id-b.id),future=values.filter(c=>c.due>now);
-  const next=due[0]?{...due[0]}:id!==null?fresh(id):null;
+  const learning=values.filter(c=>c.interval<DAY).sort((a,b)=>a.due-b.due||a.id-b.id);
+  let next=due[0]?{...due[0]}:id!==null?fresh(id):null;
+  if(!next&&learning.length&&learning[0].due<=now+1200)next={...(learning.find(c=>c.due<=now+1200&&c.id!==last)||learning[0]),learning_ahead:true};
   if(next)Object.assign(next,{word_id:Math.abs(next.id),direction:next.id<0?'reverse':'forward',waits:[1,2,3,4].map(g=>schedule(next,g)[1])});
-  return {...p.state,retained:p.reverse?[...seen].filter(id=>[id,-id].every(k=>(cards.get(k)?.interval||0)>=21*DAY)).length:values.filter(c=>c.interval>=21*DAY).length,csrf:token,next,due:due.length,new_left,reverse_left,new_today:introduced,reverse_today:back,
+  return {...p.state,retained:p.reverse?[...seen].filter(id=>[id,-id].every(k=>(cards.get(k)?.interval||0)>=21*DAY)).length:values.filter(c=>c.interval>=21*DAY).length,csrf:token,next,learning_left:learning.length,due:due.length,new_left,reverse_left,new_today:introduced,reverse_today:back,
    seen:seen.size,cards_seen:cards.size,learned:[...cards.keys()],reviews_today:count,reading,
    next_due:future.length?Math.min(...future.map(c=>c.due)):null,
    level_seen:words.filter(w=>seen.has(w.id)&&w.level===level).length,level_total:words.filter(w=>w.level===level).length};
